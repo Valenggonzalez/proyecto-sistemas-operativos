@@ -7,7 +7,7 @@ class Proceso:
         self.ta = ta
         self.ti = ti
         self.ti_restante = ti
-        self.estado = "PRE_NUEVO"
+        self.estado = "NUEVO"
 
 class Particion: #Temporal, idea general de la clase.
     def __init__(self, id, base, limite, tam, estado = "LIBRE"):
@@ -33,9 +33,9 @@ def cargar_prenuevos_prueba():
     return lista_procesos
 
 #Pasa por consola los procesos leídos, ya están en PRE_NUEVO y ordenados por tiempo de arribo.
-prenuevos = cargar_prenuevos_prueba()
-print(f"Cantidad de procesos cargados: {len(prenuevos)}")
-for p in prenuevos:
+nuevos = cargar_prenuevos_prueba()
+print(f"Cantidad de procesos cargados: {len(nuevos)}")
+for p in nuevos:
     print(f"ID: {p.id} | TA: {p.ta} | TI: {p.ti} | Estado: {p.estado}")
 
 
@@ -75,9 +75,8 @@ evento_arribo = False
 evento_fin = False
 
 #Declaración de las listas que necesita el SO:
-pre_nuevos = cargar_prenuevos_prueba() #Ya se cargan ordenados.
-n_total = len(pre_nuevos) #la longitud de pre_nuevos es la cantidad de procesos a ejecutar.
-nuevos = []
+nuevos = cargar_prenuevos_prueba() #Ya se cargan ordenados.
+n_total = len(nuevos) #la longitud de nuevos es la cantidad de procesos a ejecutar.
 listos = []
 suspendidos = []
 terminados = []
@@ -101,20 +100,21 @@ while len(terminados) < n_total:
             proc_recuperado.estado = "LISTO"
             asignar_memoria(proc_recuperado.id, proc_recuperado.tam)
             listos.append(proc_recuperado)
-
-    #3. Verificar el tiepo de arribo de pre_nuevos.
+    #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    #Verificar el correcto funcionamiento de tiempo de arribo
+    #3. Verificar el tiempo de arribo de nuevos.
     #Lo cambio por un while porque puede haber dos procesos con el mismo TA, los proceso a todos en el intante del reloj correspondiente.
-    while len(pre_nuevos) > 0 and pre_nuevos[0].ta == reloj:
+    while len(nuevos) > 0 and nuevos[0].ta == reloj:
         evento_arribo = True
-        proc_arribado = pre_nuevos.pop(0)
+        proc_arribado = nuevos.pop(0)
         proc_arribado.estado = "NUEVO"
         nuevos.append(proc_arribado)
-
+    #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
     #4. Pregunto por la cantidad de activos.
     #Si hay lugar en activos y existen procesos en NUEVO:
     while activos < 5 and len(nuevos) > 0:
         proc_admitido = nuevos.pop(0)
-        #Si el proceso Nuevo entra en la memoria, se carga y pasa a LISTO:
+        #Si el proceso Nuevo entra en la memoria, se carga y pasa a LISTO:S
         if entra_best_fit(proc_admitido.tam): 
             proc_admitido.estado = "LISTO"
             asignar_memoria(proc_admitido.id, proc_admitido.tam)
