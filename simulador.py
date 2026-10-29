@@ -1,3 +1,6 @@
+import csv
+
+
 ###### CLASES ######
 
 class Proceso:
@@ -23,21 +26,123 @@ class Particion:
         self.limite = self.base + self.tam - 1
 
 
-###### FUNCIÓN TEMPORAL PARA SIMULAR LECTURA DEL CSV ######
+###### LECTURA DEL CSV ######
 
-def cargar_nuevos_prueba():
-    # Proceso(id, tamaño, tiempo_arribo, tiempo_irrupcion)
+def cargar_procesos_csv(ruta_archivo):
+    procesos = []
 
-    p1 = Proceso(1, 100, 0, 5)
-    p2 = Proceso(2, 250, 2, 3)
-    p3 = Proceso(3, 50, 4, 2)
+    try:
+        with open(ruta_archivo, mode="r", encoding="utf-8") as archivo:
+            lector = csv.DictReader(archivo)
 
-    lista_procesos = [p1, p2, p3]
+            columnas_esperadas = {"id", "tam", "ta", "ti"}
 
-    # NUEVOS ordenado por Tiempo de Arribo
-    lista_procesos.sort(key=lambda p: p.ta)
+            if lector.fieldnames is None:
+                print("\nERROR: El archivo CSV está vacío.")
+                raise SystemExit
 
-    return lista_procesos
+            columnas_archivo = set(lector.fieldnames)
+
+            if columnas_archivo != columnas_esperadas:
+                print("\nERROR: Las columnas del CSV no son correctas.")
+                print("Se esperan las columnas: id,tam,ta,ti")
+                raise SystemExit
+
+            for numero_fila, fila in enumerate(lector, start=2):
+
+                try:
+                    proceso = Proceso(
+                        id=int(fila["id"]),
+                        tam=int(fila["tam"]),
+                        ta=int(fila["ta"]),
+                        ti=int(fila["ti"])
+                    )
+
+                    procesos.append(proceso)
+
+                except (ValueError, TypeError):
+                    print(
+                        f"\nERROR: Datos inválidos en la fila {numero_fila}."
+                    )
+                    print(
+                        "Todos los valores deben ser números enteros."
+                    )
+                    raise SystemExit
+
+    except FileNotFoundError:
+        print(
+            f"\nERROR: No se encontró el archivo '{ruta_archivo}'."
+        )
+        raise SystemExit
+
+    except PermissionError:
+        print(
+            f"\nERROR: No se puede acceder al archivo '{ruta_archivo}'."
+        )
+        raise SystemExit
+
+    if not procesos:
+        print("\nERROR: El archivo no contiene procesos.")
+        raise SystemExit
+
+    procesos.sort(
+        key=lambda p: (
+            p.ta,
+            p.id
+        )
+    )
+
+    return procesos
+
+
+###### VALIDACIONES ######
+
+def validar_procesos(procesos):
+    errores = []
+
+    if len(procesos) > 10:
+        errores.append(
+            "La cantidad de procesos supera el máximo permitido de 10."
+        )
+
+    ids = set()
+
+    for proceso in procesos:
+
+        if proceso.id in ids:
+            errores.append(
+                f"El ID {proceso.id} está repetido."
+            )
+        else:
+            ids.add(proceso.id)
+
+        if proceso.id <= 0:
+            errores.append(
+                f"El ID {proceso.id} debe ser mayor a 0."
+            )
+
+        if proceso.tam <= 0:
+            errores.append(
+                f"P{proceso.id}: el tamaño debe ser mayor a 0 KB."
+            )
+
+        if proceso.tam > 450:
+            errores.append(
+                f"P{proceso.id}: tamaño de {proceso.tam} KB. "
+                f"Supera los 450 KB disponibles para procesos."
+            )
+
+        if proceso.ta < 0:
+            errores.append(
+                f"P{proceso.id}: el tiempo de arribo no puede ser negativo."
+            )
+
+        if proceso.ti <= 0:
+            errores.append(
+                f"P{proceso.id}: el tiempo de irrupción debe ser mayor a 0."
+            )
+
+    return errores
 
 
 ###### FUNCIONES DE MEMORIA ######
@@ -53,8 +158,6 @@ def obtener_estado_memoria_libre():
     cantidad_huecos = len(huecos)
     mayor_hueco = max(huecos) if huecos else 0
 
-    # Indica cuánta memoria libre está dispersa
-    # fuera del mayor bloque contiguo.
     fragmentacion_externa = memoria_libre - mayor_hueco
 
     return (
@@ -86,6 +189,7 @@ def fusionar_huecos():
     i = 0
 
     while i < len(memoria) - 1:
+
         actual = memoria[i]
         siguiente = memoria[i + 1]
 
@@ -94,6 +198,7 @@ def fusionar_huecos():
             and siguiente.estado == "LIBRE"
             and actual.limite + 1 == siguiente.base
         ):
+
             actual.tam += siguiente.tam
             actual.actualizar_limite()
 
@@ -187,13 +292,11 @@ def asignar_memoria(id_proceso, tam):
     sobrante = particion.tam - tam
     base_original = particion.base
 
-    # La partición encontrada pasa a estar ocupada
     particion.tam = tam
     particion.estado = "OCUPADA"
     particion.id_proceso = id_proceso
     particion.actualizar_limite()
 
-    # Si sobra memoria, se crea un nuevo hueco libre
     if sobrante > 0:
 
         nueva_base = base_original + tam
@@ -219,11 +322,7 @@ def renumerar_particiones():
         particion.id = i
 
 
-###### FUNCIONES TODAVÍA PENDIENTES ######
-
-def calcular_metricas():
-    pass
-
+###### REPORTES ######
 
 def imprimir_reportes_flags():
     print("\n" + "=" * 72)
@@ -236,7 +335,6 @@ def imprimir_reportes_flags():
     if evento_fin:
         print(">> FINALIZACIÓN DE PROCESO")
 
-    # CPU
     print("\nCPU")
 
     if ejecucion is not None:
@@ -248,7 +346,6 @@ def imprimir_reportes_flags():
     else:
         print("OCIOSA")
 
-    # Cola de listos
     print("\nLISTOS")
 
     if listos:
@@ -260,7 +357,6 @@ def imprimir_reportes_flags():
     else:
         print("Vacía")
 
-    # Cola de listos suspendidos
     print("\nLISTOS / SUSPENDIDOS")
 
     if listos_suspendidos:
@@ -272,12 +368,15 @@ def imprimir_reportes_flags():
     else:
         print("Vacía")
 
-    # Memoria
     imprimir_memoria()
 
     print("=" * 72)
 
     input("\nPresione ENTER para continuar...")
+
+
+def calcular_metricas():
+    pass
 
 
 def imprimir_reportes_finales():
@@ -295,9 +394,6 @@ evento_fin = False
 
 ###### MEMORIA ######
 
-# 0 - 99 KB -> Sistema Operativo
-# 100 - 549 KB -> Procesos de usuario
-
 memoria = [
     Particion(
         id=1,
@@ -308,9 +404,34 @@ memoria = [
 ]
 
 
-###### COLAS / ESTADOS DEL SISTEMA ######
+###### CARGAR PROCESOS DESDE CSV ######
 
-nuevos = cargar_nuevos_prueba()
+ARCHIVO_PROCESOS = "procesos.csv"
+
+nuevos = cargar_procesos_csv(
+    ARCHIVO_PROCESOS
+)
+
+
+###### VALIDAR DATOS ######
+
+errores = validar_procesos(nuevos)
+
+if errores:
+
+    print("\n" + "=" * 72)
+    print(" ERROR EN LOS DATOS DE ENTRADA")
+    print("=" * 72)
+
+    for error in errores:
+        print(f"- {error}")
+
+    print("=" * 72)
+
+    raise SystemExit
+
+
+###### COLAS DEL SISTEMA ######
 
 n_total = len(nuevos)
 
@@ -318,36 +439,41 @@ listos = []
 listos_suspendidos = []
 terminados = []
 
-# Una sola CPU
 ejecucion = None
 
 
-###### MOSTRAR PROCESOS CARGADOS ######
+###### PROCESOS CARGADOS ######
 
-print("====================================")
-print("PROCESOS CARGADOS EN NUEVOS")
-print("====================================")
+print("\n" + "=" * 72)
+print(" PROCESOS CARGADOS DESDE CSV")
+print("=" * 72)
 
-print(f"Cantidad de procesos: {n_total}")
+print(
+    f"{'ID':<8}"
+    f"{'Tamaño':<12}"
+    f"{'TA':<8}"
+    f"{'TI':<8}"
+    f"{'Estado':<15}"
+)
 
-for p in nuevos:
+print("-" * 72)
+
+for proceso in nuevos:
 
     print(
-        f"ID: {p.id} | "
-        f"Tamaño: {p.tam} KB | "
-        f"TA: {p.ta} | "
-        f"TI: {p.ti} | "
-        f"Estado: {p.estado}"
+        f"{proceso.id:<8}"
+        f"{str(proceso.tam) + ' KB':<12}"
+        f"{proceso.ta:<8}"
+        f"{proceso.ti:<8}"
+        f"{proceso.estado:<15}"
     )
 
-print("====================================")
+print("=" * 72)
 
 
 ###### BUCLE PRINCIPAL ######
 
 while len(terminados) < n_total:
-
-    print(f"\n----- RELOJ: {reloj} -----")
 
 
     # ==========================================================
@@ -358,8 +484,6 @@ while len(terminados) < n_total:
         ejecucion is not None
         and ejecucion.ti_restante == 0
     ):
-
-        print(f"P{ejecucion.id} terminó.")
 
         ejecucion.estado = "TERMINADO"
 
@@ -397,11 +521,6 @@ while len(terminados) < n_total:
 
                 listos.append(proc_recuperado)
 
-                print(
-                    f"P{proc_recuperado.id} pasa de "
-                    f"LISTO_SUSPENDIDO a LISTO."
-                )
-
 
     # ==========================================================
     # 3. DETECTAR EVENTOS DE ARRIBO
@@ -410,15 +529,7 @@ while len(terminados) < n_total:
     for proceso in nuevos:
 
         if proceso.ta == reloj:
-
             evento_arribo = True
-
-            print(
-                f"Arribó P{proceso.id} "
-                f"(TA={proceso.ta}, "
-                f"TI={proceso.ti}, "
-                f"Tamaño={proceso.tam} KB)"
-            )
 
 
     # ==========================================================
@@ -433,9 +544,6 @@ while len(terminados) < n_total:
 
         proc_admitido = nuevos.pop(0)
 
-        # ------------------------------------------------------
-        # ENTRA EN MEMORIA
-        # ------------------------------------------------------
 
         if entra_best_fit(proc_admitido.tam):
 
@@ -448,14 +556,6 @@ while len(terminados) < n_total:
 
             listos.append(proc_admitido)
 
-            print(
-                f"P{proc_admitido.id} fue admitido "
-                f"y pasa a LISTO."
-            )
-
-        # ------------------------------------------------------
-        # NO ENTRA EN MEMORIA
-        # ------------------------------------------------------
 
         else:
 
@@ -467,10 +567,6 @@ while len(terminados) < n_total:
                 proc_admitido
             )
 
-            print(
-                f"P{proc_admitido.id} fue admitido "
-                f"pero pasa a LISTO_SUSPENDIDO."
-            )
 
         activos += 1
 
@@ -493,9 +589,9 @@ while len(terminados) < n_total:
     )
 
 
-    # ----------------------------------------------------------
+    # ==========================================================
     # CPU LIBRE
-    # ----------------------------------------------------------
+    # ==========================================================
 
     if ejecucion is None:
 
@@ -507,27 +603,12 @@ while len(terminados) < n_total:
 
             ejecucion = proc_menor_ti
 
-            print(
-                f"CPU asignada a P{ejecucion.id} "
-                f"(TI restante: "
-                f"{ejecucion.ti_restante})"
-            )
 
-        else:
-
-            print("CPU OCIOSA")
-
-
-    # ----------------------------------------------------------
+    # ==========================================================
     # CPU OCUPADA
-    # ----------------------------------------------------------
+    # ==========================================================
 
     else:
-
-        # SRTF:
-        # menor TI restante
-        # desempate: menor TA
-        # segundo desempate: menor ID
 
         if (
             proc_menor_ti is not None
@@ -544,17 +625,10 @@ while len(terminados) < n_total:
             )
         ):
 
-            print(
-                f"EXPROPIACIÓN: "
-                f"P{proc_menor_ti.id} reemplaza a "
-                f"P{ejecucion.id}"
-            )
-
-            # El proceso expropiado vuelve a LISTO
             ejecucion.estado = "LISTO"
+
             listos.append(ejecucion)
 
-            # El proceso seleccionado toma la CPU
             listos.remove(proc_menor_ti)
 
             proc_menor_ti.estado = "EJECUCION"
@@ -567,19 +641,7 @@ while len(terminados) < n_total:
     # ==========================================================
 
     if ejecucion is not None:
-
-        print(
-            f"Ejecutando P{ejecucion.id} | "
-            f"TI restante antes: "
-            f"{ejecucion.ti_restante}"
-        )
-
         ejecucion.ti_restante -= 1
-
-        print(
-            f"TI restante después: "
-            f"{ejecucion.ti_restante}"
-        )
 
 
     # ==========================================================
@@ -607,6 +669,7 @@ calcular_metricas()
 
 imprimir_reportes_finales()
 
-print("\n====================================")
-print("SIMULACIÓN FINALIZADA")
-print("====================================")
+
+print("\n" + "=" * 72)
+print(" SIMULACIÓN FINALIZADA")
+print("=" * 72)
