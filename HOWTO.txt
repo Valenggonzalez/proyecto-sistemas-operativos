@@ -1,0 +1,131 @@
+HOWTO – Simulador de Planificación y Asignación de Memoria
+
+Grupo N° 4
+
+Integrantes:
+
+- Elías, Máximo Rafael
+- Estigarribia, Julián Gines
+- Gonzalez, Valentina
+- Inglant, Facundo Agustín
+- Monzón, Lourdes Antonella
+- Nuñez, Lutaro José
+- Quiróz, Ariel Luis
+
+1. Descripción
+
+El programa implementa un simulador de planificación de procesos y asignación de memoria.
+
+La planificación de CPU se realiza mediante el algoritmo **SRTF (Shortest Remaining Time First)** y la asignación de memoria mediante **Best-Fit**, utilizando particiones variables.
+
+Los procesos utilizados durante la simulación son cargados desde un archivo CSV seleccionado por el usuario.
+
+2. Ejecución del programa
+
+Para ejecutar el simulador mediante el archivo ejecutable:
+
+1. Ejecutar el archivo `simulador.exe`.
+2. Se mostrará la pantalla de presentación del programa.
+3. Presionar `ENTER` para continuar.
+4. El programa solicitará la ruta del archivo CSV que contiene los procesos.
+5. Ingresar o pegar la ruta completa del archivo y presionar `ENTER`.
+6. Si los datos son válidos, se mostrarán los procesos cargados.
+7. Presionar `ENTER` para comenzar la simulación.
+8. Durante la ejecución, presionar `ENTER` cada vez que el programa lo solicite para avanzar al siguiente evento.
+
+3. Formato del archivo CSV
+
+El archivo debe contener cuatro datos para cada proceso:
+
+- Identificador del proceso.
+- Tamaño del proceso.
+- Tiempo de arribo (TA).
+- Tiempo de irrupción (TI).
+
+Ejemplo:
+
+Proceso,TA,TI,Tamaño (K)
+P1,3,2,120
+P2,10,4,130
+P3,10,1,40
+P4,14,2,60
+P5,20,2,90
+
+
+El programa también admite identificadores escritos como:
+
+
+1
+2
+3
+
+
+o:
+
+
+P1
+P2
+P3
+
+
+El orden de las columnas puede variar, siempre que sus nombres permitan identificar correctamente los datos correspondientes a:
+
+- Proceso o ID
+- Tamaño
+- TA
+- TI
+
+4. Restricciones
+
+El simulador valida automáticamente las principales restricciones de entrada:
+
+- Máximo de 10 procesos.
+- Los identificadores no pueden repetirse.
+- El tamaño de cada proceso debe ser mayor a 0 KB.
+- El tamaño de un proceso no puede superar los 450 KB disponibles para procesos de usuario.
+- El tiempo de arribo no puede ser negativo.
+- El tiempo de irrupción debe ser mayor a 0.
+- No puede haber campos obligatorios vacíos.
+
+Si se detecta algún error, el programa mostrará un mensaje indicando el problema encontrado.
+
+5. Funcionamiento del simulador
+
+Durante la simulación se muestra información cada vez que ocurre un evento de arribo o finalización de un proceso.
+
+Se presenta:
+
+- Estado de la CPU.
+- Proceso actualmente en ejecución.
+- Cola de procesos Listos.
+- Cola de procesos Listos/Suspendidos.
+- Estado de las particiones de memoria.
+- Memoria libre.
+- Cantidad de huecos.
+- Mayor hueco disponible.
+- Fragmentación externa.
+
+El simulador no realiza una corrida completamente ininterrumpida. Después de cada evento solicita al usuario presionar `ENTER` para continuar.
+
+6. Métricas finales
+
+Al finalizar la simulación se muestran:
+
+- Tiempo de finalización de cada proceso.
+- Tiempo de retorno.
+- Tiempo de espera.
+- Promedio del tiempo de retorno.
+- Promedio del tiempo de espera.
+- Throughput o rendimiento del sistema.
+
+7. Ejecución desde el código fuente
+
+También es posible ejecutar directamente el código fuente.
+
+Para ello se requiere tener Python instalado.
+
+Desde una terminal ubicada en la carpeta donde se encuentra `simulador.py`, ejecutar:
+
+python simulador.py
+
+Luego seguir los mismos pasos indicados anteriormente para seleccionar el archivo CSV e iniciar la simulación.
