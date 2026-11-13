@@ -2,6 +2,12 @@ import csv
 import os
 import unicodedata
 
+from colorama import Fore, Style, init
+
+
+# Activa colores en consola y los reinicia automáticamente.
+init(autoreset=True)
+
 
 ###### CLASES ######
 
@@ -49,9 +55,6 @@ class Particion:
 
 
 # Normaliza nombres de columnas.
-# Ejemplo:
-# "Tamaño (K)" -> "tamano (k)"
-# "TIEMPO DE ARRIBO" -> "tiempo de arribo"
 def normalizar_nombre_columna(nombre):
 
     nombre = nombre.strip().lower()
@@ -116,8 +119,6 @@ def cargar_procesos_csv(ruta_archivo):
                 raise SystemExit
 
 
-            # Distintos nombres permitidos
-            # para las columnas del CSV.
             alias_columnas = {
 
                 "id": {
@@ -151,8 +152,6 @@ def cargar_procesos_csv(ruta_archivo):
             }
 
 
-            # Relaciona las columnas del archivo
-            # con los nombres internos.
             columnas_mapeadas = {}
 
             for columna_original in lector.fieldnames:
@@ -208,13 +207,11 @@ def cargar_procesos_csv(ruta_archivo):
                 raise SystemExit
 
 
-            # Lee cada fila del CSV.
             for numero_fila, fila in enumerate(
                 lector,
                 start=2
             ):
 
-                # Control de campos vacíos.
                 for columna_original in (
                     columnas_mapeadas.values()
                 ):
@@ -303,7 +300,7 @@ def cargar_procesos_csv(ruta_archivo):
     except FileNotFoundError:
 
         print(
-            f"\nERROR: No se encontró el archivo:"
+            "\nERROR: No se encontró el archivo:"
         )
 
         print(
@@ -316,8 +313,8 @@ def cargar_procesos_csv(ruta_archivo):
     except PermissionError:
 
         print(
-            f"\nERROR: No se puede acceder "
-            f"al archivo:"
+            "\nERROR: No se puede acceder "
+            "al archivo:"
         )
 
         print(
@@ -336,8 +333,6 @@ def cargar_procesos_csv(ruta_archivo):
         raise SystemExit
 
 
-    # Ordena por tiempo de arribo
-    # y luego por ID.
     procesos.sort(
         key=lambda p: (
             p.ta,
@@ -355,7 +350,6 @@ def validar_procesos(procesos):
 
     errores = []
 
-    # Máximo de procesos permitidos.
     if len(procesos) > 10:
 
         errores.append(
@@ -369,7 +363,6 @@ def validar_procesos(procesos):
 
     for proceso in procesos:
 
-        # ID repetido.
         if proceso.id in ids:
 
             errores.append(
@@ -383,7 +376,6 @@ def validar_procesos(procesos):
             )
 
 
-        # ID válido.
         if proceso.id <= 0:
 
             errores.append(
@@ -392,7 +384,6 @@ def validar_procesos(procesos):
             )
 
 
-        # Tamaño válido.
         if proceso.tam <= 0:
 
             errores.append(
@@ -402,7 +393,6 @@ def validar_procesos(procesos):
             )
 
 
-        # Máximo de memoria disponible.
         if proceso.tam > 450:
 
             errores.append(
@@ -413,7 +403,6 @@ def validar_procesos(procesos):
             )
 
 
-        # TA válido.
         if proceso.ta < 0:
 
             errores.append(
@@ -423,7 +412,6 @@ def validar_procesos(procesos):
             )
 
 
-        # TI válido.
         if proceso.ti <= 0:
 
             errores.append(
@@ -479,8 +467,6 @@ def obtener_estado_memoria_libre():
     )
 
 
-# Libera la memoria ocupada
-# por un proceso terminado.
 def liberar_memoria(id_proceso):
 
     for particion in memoria:
@@ -499,7 +485,6 @@ def liberar_memoria(id_proceso):
     return False
 
 
-# Fusiona huecos libres contiguos.
 def fusionar_huecos():
 
     memoria.sort(
@@ -542,8 +527,6 @@ def fusionar_huecos():
     renumerar_particiones()
 
 
-# Busca el hueco más pequeño
-# donde entre el proceso.
 def buscar_best_fit(tam):
 
     candidatos = []
@@ -579,7 +562,6 @@ def entra_best_fit(tam):
     )
 
 
-# Asigna memoria mediante Best-Fit.
 def asignar_memoria(
     id_proceso,
     tam
@@ -615,8 +597,6 @@ def asignar_memoria(
     particion.actualizar_limite()
 
 
-    # Si sobra memoria,
-    # crea un nuevo hueco.
     if sobrante > 0:
 
         nueva_particion = Particion(
@@ -652,8 +632,6 @@ def renumerar_particiones():
         particion.id = i
 
 
-# Intenta recuperar procesos
-# de LISTO/SUSPENDIDO.
 def recuperar_suspendidos():
 
     i = 0
@@ -763,35 +741,48 @@ def imprimir_memoria():
 
 def imprimir_reportes_flags():
 
+    # Encabezado del evento en color cian.
     print(
-        "\n" + "=" * 72
+        "\n"
+        + Fore.CYAN
+        + Style.BRIGHT
+        + "=" * 72
     )
 
     print(
-        f" EVENTO DEL SISTEMA | "
+        Fore.CYAN
+        + Style.BRIGHT
+        + f" EVENTO DEL SISTEMA | "
         f"Tiempo: {reloj}"
     )
 
     print(
-        "=" * 72
+        Fore.CYAN
+        + Style.BRIGHT
+        + "=" * 72
     )
 
 
+    # Arribo en verde.
     if evento_arribo:
 
         print(
-            ">> ARRIBO DE PROCESO"
+            Fore.GREEN
+            + Style.BRIGHT
+            + ">> ARRIBO DE PROCESO"
         )
 
 
+    # Finalización en rojo.
     if evento_fin:
 
         print(
-            ">> FINALIZACIÓN DE PROCESO"
+            Fore.RED
+            + Style.BRIGHT
+            + ">> FINALIZACIÓN DE PROCESO"
         )
 
 
-    # CPU
     print(
         "\nCPU"
     )
@@ -813,7 +804,6 @@ def imprimir_reportes_flags():
         )
 
 
-    # Cola de listos
     print(
         "\nLISTOS"
     )
@@ -836,7 +826,6 @@ def imprimir_reportes_flags():
         )
 
 
-    # Cola de listos/suspendidos
     print(
         "\nLISTOS / SUSPENDIDOS"
     )
@@ -865,7 +854,9 @@ def imprimir_reportes_flags():
 
 
     print(
-        "=" * 72
+        Fore.CYAN
+        + Style.BRIGHT
+        + "=" * 72
     )
 
 
@@ -1011,14 +1002,14 @@ def mostrar_inicio():
     print(r"""
 ========================================================================
 
-             _____ _                 _           _
-            / ____(_)               | |         | |
-            | (___  _ _ __ ___  _   _| | __ _  __| | ___  _ __
-            \___ \| | '_ ` _ \| | | | |/ _` |/ _` |/ _ \| '__|
-             ____) | | | | | | | |_| | | (_| | (_| | (_) | |
-            |_____/|_|_| |_| |_|\__,_|_|\__,_|\__,_|\___/|_|
+   _____ _                 _           _
+  / ____(_)               | |         | |
+ | (___  _ _ __ ___  _   _| | __ _  __| | ___  _ __
+  \___ \| | '_ ` _ \| | | | |/ _` |/ _` |/ _ \| '__|
+  ____) | | | | | | | |_| | | (_| | (_| | (_) | |
+ |_____/|_|_| |_| |_|\__,_|_|\__,_|\__,_|\___/|_|
 
-        ASIGNACIÓN DE MEMORIA Y PLANIFICACIÓN DE PROCESOS 2026
+               PLANIFICACIÓN Y MEMORIA 2026
 
 ========================================================================
 
@@ -1034,7 +1025,7 @@ Integrantes:
   - Nuñez, Lutaro José
   - Quiróz, Ariel Luis
 
-
+========================================================================
 """)
 
 
@@ -1044,7 +1035,6 @@ Integrantes:
     )
 
 
-    # Limpia la terminal.
     os.system(
         "cls"
         if os.name == "nt"
@@ -1074,7 +1064,7 @@ def seleccionar_archivo_csv():
 
 
     archivo = input(
-        "\nRuta del archivo CSV y presione ENTER: "
+        "\nRuta del archivo CSV: "
     ).strip()
 
 
@@ -1090,8 +1080,8 @@ def seleccionar_archivo_csv():
         ).strip()
 
 
-    # Windows puede copiar la ruta
-    # entre comillas.
+    # Elimina comillas si la ruta
+    # fue copiada desde Windows.
     archivo = archivo.strip('"')
     archivo = archivo.strip("'")
 
@@ -1202,7 +1192,6 @@ listos_suspendidos = []
 terminados = []
 
 
-# Una sola CPU.
 ejecucion = None
 
 
@@ -1253,7 +1242,7 @@ print(
 
 
 print(
-    f"\nArchivo cargado correctamente:"
+    "\nArchivo cargado correctamente:"
 )
 
 print(
@@ -1342,8 +1331,6 @@ while len(terminados) < n_total:
         )
 
 
-        # Si entra en memoria,
-        # pasa a LISTO.
         if entra_best_fit(
             proc_admitido.tam
         ):
@@ -1362,9 +1349,6 @@ while len(terminados) < n_total:
             )
 
 
-        # Si fue admitido,
-        # pero no entra en memoria,
-        # pasa a LISTO/SUSPENDIDO.
         else:
 
             proc_admitido.estado = (
@@ -1376,9 +1360,6 @@ while len(terminados) < n_total:
             )
 
 
-        # LISTO, EJECUCIÓN y
-        # LISTO/SUSPENDIDO
-        # forman parte de los activos.
         activos += 1
 
 
@@ -1435,9 +1416,6 @@ while len(terminados) < n_total:
     else:
 
 
-        # SRTF expropia si aparece
-        # un proceso con menor
-        # tiempo restante.
         if (
             proc_menor_ti
             is not None
@@ -1455,9 +1433,6 @@ while len(terminados) < n_total:
         ):
 
 
-            # El proceso expropiado
-            # vuelve a LISTO,
-            # pero permanece en memoria.
             ejecucion.estado = (
                 "LISTO"
             )
@@ -1525,13 +1500,25 @@ imprimir_reportes_finales()
 
 
 print(
-    "\n" + "=" * 72
+    "\n" + Fore.GREEN
+    + Style.BRIGHT
+    + "=" * 72
 )
 
 print(
-    " SIMULACIÓN FINALIZADA"
+    Fore.GREEN
+    + Style.BRIGHT
+    + " SIMULACIÓN FINALIZADA"
 )
 
 print(
-    "=" * 72
+    Fore.GREEN
+    + Style.BRIGHT
+    + "=" * 72
+)
+
+
+input(
+    "\nPresione ENTER para finalizar "
+    "y cerrar el programa..."
 )
