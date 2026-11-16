@@ -216,5 +216,15 @@ finalización, retorno y espera, además de:
 8. USO DE IA
 ======================================================================
 
-[Completar según la normativa de UTN: indicar si se utilizó IA, de qué
-manera y cuál fue el rol del equipo en esa interacción.]
+Durante el desarrollo del proyecto se utilizaron herramientas de inteligencia artificial generativa como recurso de apoyo.
+
+La IA fue utilizada para:
+
+  - Realizar consultas sobre conceptos de programación en Python y Sistemas Operativos.
+  - Obtener asistencia en la implementación y revisión de algunas partes del código.
+  - Identificar posibles errores y analizar alternativas para resolverlos.
+  - Colaborar en la organización, redacción y revisión de la documentación del proyecto.
+
+El equipo tuvo un rol activo durante todo el proceso de desarrollo: definió los requerimientos y el funcionamiento del simulador, analizó y evaluó las sugerencias proporcionadas por la IA, realizó las modificaciones necesarias, implementó y verificó las soluciones y llevó adelante las pruebas de funcionamiento.
+
+Las herramientas de IA se utilizaron como complemento del trabajo del equipo, que mantuvo la responsabilidad sobre las decisiones técnicas, el código fuente y el resultado final del proyecto.
