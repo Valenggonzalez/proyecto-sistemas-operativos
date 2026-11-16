@@ -1,0 +1,220 @@
+HOWTO - Simulador de Planificación y Asignación de Memoria
+Sistemas Operativos - UTN FRRe - 2026
+
+Grupo N° 4
+
+Integrantes:
+
+  - Elías, Máximo Rafael
+  - Estigarribia, Julián Gines
+  - Gonzalez, Valentina
+  - Inglant, Facundo Agustín
+  - Monzón, Lourdes Antonella
+  - Nuñez, Lutaro José
+  - Quiróz, Ariel Luis
+
+
+======================================================================
+1. DESCRIPCIÓN
+======================================================================
+
+El programa implementa un simulador de planificación de procesos a corto
+plazo y de asignación de memoria, sobre un único procesador.
+
+- Planificación de CPU: SRTF (Shortest Remaining Time First).
+- Memoria: particiones variables (MVT) con política Best-Fit.
+  * 100 KB para el Sistema Operativo (direcciones 0 a 99).
+  * 450 KB para procesos de usuario (direcciones 100 a 549).
+- Estados: Nuevo, Listo, Listo y Suspendido, Ejecución y Terminado.
+- Grado máximo de multiprogramación: 5 procesos entre Ejecución, Listos
+  y Listos/Suspendidos.
+
+Los procesos se cargan desde un archivo CSV elegido por el usuario.
+
+
+======================================================================
+2. EJECUCIÓN DEL PROGRAMA
+======================================================================
+
+2.1. Desde el ejecutable (Windows)
+
+  a) Ejecutar el archivo simulador.exe.
+  b) Se mostrará la pantalla de presentación. Presionar ENTER.
+  c) El programa solicitará la ruta del archivo CSV con los procesos.
+     Ingresar o pegar la ruta completa (con o sin comillas) y presionar
+     ENTER.
+  d) Si los datos son válidos, se mostrarán los procesos cargados.
+     Presionar ENTER para comenzar la simulación.
+  e) Durante la simulación, presionar ENTER cada vez que el programa lo
+     solicite para avanzar al siguiente evento.
+  f) Al finalizar se muestran las métricas. Presionar ENTER para cerrar.
+
+2.2. Desde el código fuente
+
+Requisitos:
+
+  - Python 3 instalado.
+  - Librería colorama (se usa para los colores de la consola).
+
+Instalación de la dependencia:
+
+  pip install colorama
+
+Ejecución, desde una terminal ubicada en la carpeta de simulador.py:
+
+  python simulador.py
+
+Luego seguir los mismos pasos indicados en 2.1 (a partir del paso b).
+
+
+======================================================================
+3. FORMATO DEL ARCHIVO CSV
+======================================================================
+
+El archivo debe contener, para cada proceso:
+
+  - Identificador del proceso.
+  - Tamaño del proceso (en KB).
+  - Tiempo de arribo (TA).
+  - Tiempo de irrupción (TI).
+
+Ejemplo:
+
+  Proceso,TA,TI,Tamaño (K)
+  P1,3,2,120
+  P2,10,4,130
+  P3,10,1,40
+  P4,14,2,60
+  P5,20,2,90
+
+Identificadores admitidos: pueden escribirse como 1, 2, 3 o como
+P1, P2, P3.
+
+Encabezados admitidos (no distingue mayúsculas ni acentos):
+
+  - Identificador: Proceso, ID, ID Proceso
+  - Tamaño: Tamaño, Tamaño (K), Tamaño (KB), Tam
+  - Tiempo de arribo: TA, Tiempo de arribo
+  - Tiempo de irrupción: TI, Tiempo de irrupción
+
+El orden de las columnas puede variar. Tamaño, TA y TI deben ser números
+enteros.
+
+
+======================================================================
+4. RESTRICCIONES Y VALIDACIONES
+======================================================================
+
+El simulador valida los datos antes de comenzar:
+
+  - El archivo debe existir, ser accesible y no estar vacío.
+  - Las columnas deben ser reconocibles.
+  - No puede haber campos obligatorios vacíos.
+  - Tamaño, TA y TI deben ser números enteros.
+  - Máximo de 10 procesos.
+  - Los identificadores no pueden repetirse y deben ser mayores a 0.
+  - El tamaño debe ser mayor a 0 KB y no puede superar los 450 KB
+    disponibles para procesos de usuario.
+  - El tiempo de arribo no puede ser negativo.
+  - El tiempo de irrupción debe ser mayor a 0.
+
+Si se detecta un error, el programa informa el problema, espera un ENTER
+y se cierra. No se inicia la simulación.
+
+
+======================================================================
+5. FUNCIONAMIENTO DEL SIMULADOR
+======================================================================
+
+Se muestra el estado del sistema cada vez que llega un proceso o
+finaliza el proceso en ejecución. El reporte refleja el estado en ese
+instante, antes de ejecutar la unidad de CPU correspondiente. Después de
+cada reporte el programa espera que el usuario presione ENTER, por lo
+que no hay corridas ininterrumpidas.
+
+Cada reporte incluye:
+
+  - Estado de la CPU: proceso en ejecución y su TI restante, u OCIOSA.
+  - Cola de Listos, con el TI restante de cada proceso.
+  - Cola de Listos/Suspendidos, con el tamaño de cada proceso.
+  - Tabla de particiones de memoria:
+      ID, Inicio, Fin, Tamaño, Estado (LIBRE/OCUPADA), Proceso asignado
+      y Fragmentación (0 KB en particiones ocupadas, ya que MVT asigna
+      el tamaño exacto del proceso).
+  - Memoria libre, cantidad de huecos, mayor hueco y fragmentación
+    externa.
+
+
+======================================================================
+6. DECISIONES DE DISEÑO
+======================================================================
+
+6.1. Colas y CPU
+  Hay tres colas: Nuevos, Listos y Listos/Suspendidos. La CPU no es una
+  cola: contiene el proceso en ejecución o está ociosa.
+
+6.2. Admisión de procesos
+  - Un proceso arriba cuando TA <= reloj. Varios procesos pueden llegar
+    en el mismo instante; se atienden ordenados por TA y luego por ID.
+  - Se admite si hay cupo (menos de 5 procesos activos).
+  - Si no hay cupo, el proceso permanece en Nuevos y se reconsidera
+    cuando se libere un lugar, aunque su instante de arribo ya haya
+    pasado.
+  - Si hay cupo pero no entra en memoria por Best-Fit, pasa a
+    Listos/Suspendidos.
+
+6.3. Selección desde Listos/Suspendidos
+  Cuando un proceso termina y libera memoria, se recorre TODA la cola de
+  Listos/Suspendidos en orden de llegada. Cada proceso que entra por
+  Best-Fit pasa a Listos; los que no entran siguen esperando.
+  Fundamento: aprovecha mejor la memoria disponible y evita que un
+  proceso grande bloquee a otros que sí podrían ejecutarse. La
+  contrapartida es que un proceso grande puede esperar más tiempo.
+  Los suspendidos se reconsideran antes que los procesos de Nuevos,
+  porque llegaron antes al sistema.
+
+6.4. Planificación SRTF
+  Se elige el proceso listo con menor TI restante. Desempates: menor TA
+  y luego menor ID. Si aparece un proceso listo que gana con ese
+  criterio al que está en CPU, lo expropia: el proceso desalojado vuelve
+  a Listos y conserva su memoria (la expropiación no implica
+  suspensión).
+
+6.5. CPU ociosa
+  Si no hay procesos listos, la CPU queda ociosa. El reloj avanza de a
+  una unidad sin descontar tiempo de irrupción hasta que llegue o se
+  libere un proceso.
+
+6.6. Memoria
+  Al terminar un proceso se libera su partición y se fusionan los
+  huecos libres adyacentes. Las particiones se renumeran en orden de
+  dirección después de cada asignación o fusión.
+
+
+======================================================================
+7. MÉTRICAS FINALES
+======================================================================
+
+Los tiempos se miden desde el instante en que el proceso entra a la cola
+de Listos (T_listo): directamente desde Nuevos, o desde
+Listos/Suspendidos cuando consigue memoria. No se toma como referencia
+el arribo a Nuevos ni a Listos/Suspendidos.
+
+  Tiempo de retorno = Tiempo de finalización - T_listo
+  Tiempo de espera  = Tiempo de retorno - Tiempo de irrupción
+  Throughput        = Procesos terminados / Tiempo total de simulación
+
+Al finalizar se muestran, para cada proceso, su TA, TI, tiempo de
+finalización, retorno y espera, además de:
+
+  - Promedio del tiempo de retorno.
+  - Promedio del tiempo de espera.
+  - Throughput (rendimiento del sistema).
+
+
+======================================================================
+8. USO DE IA
+======================================================================
+
+[Completar según la normativa de UTN: indicar si se utilizó IA, de qué
+manera y cuál fue el rol del equipo en esa interacción.]
