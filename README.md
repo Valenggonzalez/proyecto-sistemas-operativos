@@ -1,4 +1,4 @@
-# Simulador de Planificación de Procesos y Asignación de Memoria
+# Simulador de Planificación de Procesos y Asignación de Memoria.
 
 Proyecto desarrollado para la materia **Sistemas Operativos** (UTN FRRe, 2026) por el **Grupo N° 4**.
 
